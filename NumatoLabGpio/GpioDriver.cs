@@ -12,7 +12,7 @@ namespace NumatoLabGpio
     {
         private const int Ionumber = 16;
 
-        private string _comPort;
+        private readonly string _comPort;
         private SerialPort _serialPort;
         private string _serialData;
         private bool _dataInBuffer;
@@ -35,6 +35,7 @@ namespace NumatoLabGpio
             var data = GetData();
             if (data == null) throw new Exception("Port not valid or no module attached");
             if (data.Length < 5)throw new Exception("Port not valid or no module attached");
+
             _connected = true;
             _gpioOutputDirection = new bool[Ionumber];
             for (int i = 0; i < Ionumber; i++)
@@ -52,14 +53,7 @@ namespace NumatoLabGpio
         {
             var portNumber = ValidateGpioPortNumber(gpioNumber);
 
-            if (state)
-            {
-                SendData($"gpio set {portNumber}");
-            }
-            else
-            {
-                SendData($"gpio clear {portNumber}");
-            }
+            SendData(state ? $"gpio set {portNumber}" : $"gpio clear {portNumber}");
         }
 
 
@@ -89,8 +83,6 @@ namespace NumatoLabGpio
 
             return data[0] == '1';
         }
-
-        // *************************************************************************************************
 
         private void SetDirection()
         {
@@ -133,9 +125,11 @@ namespace NumatoLabGpio
                 _serialPort = null;
             }
 
-            _serialPort = new SerialPort 
-                {BaudRate = 9600};
-            _serialPort.PortName = _comPort;
+            _serialPort = new SerialPort
+            {
+                BaudRate = 9600,
+                PortName = _comPort
+            };
             _serialPort.Open();
             _serialPort.DataReceived += SerialPortOnDataReceived;
         }
